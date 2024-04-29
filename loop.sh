@@ -10,15 +10,19 @@ do
             echo $FILE
             EXT="${FILE#*.}"
             echo $EXT
-            if [[ "$EXT" == "docx" ]]
+            NAME="${FILE##*/}" 
+            NAME_NO_EXT="${NAME%.*}"
+            if [[ "$EXT" == "docx" ]] || [[ "$EXT" == "pdf" ]]
             then
-                echo docx found
-                NAME="${FILE##*/}" 
-                NAME_NO_EXT="${NAME%.*}"
-
-                echo converting $NAME_NO_EXT to pdf
-                libreoffice --headless --convert-to pdf "$FILE" --outdir $PWD/data/pdf    
-
+                if [[ "$EXT" == "docx" ]]
+                then
+                    echo docx found
+                    echo converting $NAME_NO_EXT to pdf
+                    libreoffice --headless --convert-to pdf "$FILE" --outdir $PWD/data/pdf
+                else
+                    echo pdf found    
+                    cp "$FILE" "$PWD/data/pdf"
+                fi    
                 echo separating "$PWD/data/sep-pdf/$NAME_NO_EXT-%d.pdf" to pdf
                 pdfseparate "$PWD/data/pdf/$NAME_NO_EXT.pdf" "$PWD/data/sep-pdf/$NAME_NO_EXT-%d.pdf"
                 rm "$PWD/data/pdf/$NAME_NO_EXT.pdf"
@@ -29,6 +33,7 @@ do
                     PDF_NO_EXT="${PDFNAME%.*}"
                     echo converting "$PWD/data/sep-pdf/$PDF_NO_EXT.pdf" to png
                     convert -density 300 "$PWD/data/sep-pdf/$PDF_NO_EXT.pdf" "$PWD/data/png/$PDF_NO_EXT.png"
+                    sleep 1
                     rm "$PWD/data/sep-pdf/$PDF_NO_EXT.pdf"
                 done
             else
