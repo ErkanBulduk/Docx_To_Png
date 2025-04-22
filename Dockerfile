@@ -11,8 +11,8 @@ WORKDIR /app
 COPY ./loop.sh .
 RUN chmod +x loop.sh
 RUN mkdir data
-RUN mkdir ./data/docx
-RUN mkdir ./data/docx/reports
+RUN mkdir ./data/fileToConvert
+RUN mkdir ./data/fileToConvert/reports
 RUN mkdir ./data/pdf
 RUN mkdir ./data/sep-pdf
 RUN mkdir ./data/png
