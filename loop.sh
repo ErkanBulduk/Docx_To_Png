@@ -3,6 +3,8 @@ echo beginning loop
 set -e
 
 libreoffice="/c/Program Files/LibreOffice/program/soffice.exe"
+pdfseparate="/c/Tools/poppler/Library/bin/pdfseparate"
+pdftoppm="/c/Tools/poppler/Library/bin/pdftoppm"
 
 while true
 do
@@ -21,27 +23,45 @@ do
 
             mkdir -p "$PDF_OUTPUT_DIR"
 
-            if [[ "$EXT" == "docx" || "$EXT" == "pptx" ]]
+            if [[ "$EXT" == "docx" || "$EXT" == "pptx" || "$EXT" == "pdf" ]]
             then
-                echo "$EXT found - converting $NAME_NO_EXT to PDF"
-                "$libreoffice" --headless --convert-to pdf "$FILE" --outdir "$PDF_OUTPUT_DIR"
-                echo "Conversion done for $NAME_NO_EXT"
-                sleep 3
-            elif [[ "$EXT" == "pdf" ]]
-            then
-                echo "PDF found - copying to $PDF_OUTPUT_DIR"
-                cp "$FILE" "$PDF_OUTPUT_DIR"
+                if [[ "$EXT" == "docx" || "$EXT" == "pptx" ]]
+                then
+                    echo "$EXT found - converting $NAME_NO_EXT to PDF"
+                    libreoffice --headless --convert-to pdf "$FILE" --outdir "$PDF_OUTPUT_DIR"
+                    echo "Conversion done for $NAME_NO_EXT"
+                    sleep 3
+                else
+                    echo "PDF found - copying to $PDF_OUTPUT_DIR"
+                    cp "$FILE" "$PDF_OUTPUT_DIR"
+                fi
+
+                PDF_FILE="$PDF_OUTPUT_DIR/$NAME_NO_EXT.pdf"
+                SEP_DIR="$PWD/data/sep-pdf/$REL_DIR"
+                PNG_DIR="$PWD/data/png/$REL_DIR"
+
+                mkdir -p "$SEP_DIR" "$PNG_DIR"
+
+                echo "Separating $PDF_FILE"
+                pdfseparate "$PDF_FILE" "$SEP_DIR/$NAME_NO_EXT-%d.pdf"
+
+                for PDF in "$SEP_DIR"/*.pdf
+                do
+                    PDFNAME="${PDF##*/}" 
+                    PDF_NO_EXT="${PDFNAME%.*}"
+                    echo "Converting $PDF to PNG"
+                    pdftoppm -png -r 300 "$PDF" "$PNG_DIR/$PDF_NO_EXT"
+                    sleep 1
+                    rm "$PDF"
+                done
             else
-                echo "Unsupported file type: $EXT"
-                continue
+                echo "Not docx/pptx/pdf, skipping"
             fi
 
-            # Archiver l’original
             echo "Archiving $FILE"
             mkdir -p "$PWD/data/archives/$REL_DIR"
             cp "$FILE" "$PWD/data/archives/$REL_DIR"
 
-            # Supprimer l’original
             echo "Removing original $FILE"
             rm "$FILE"
         done
