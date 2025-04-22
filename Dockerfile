@@ -1,5 +1,5 @@
 FROM ubuntu:latest
-RUN apt-get update
+RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y libreoffice
 RUN apt-get install -y poppler-utils
 RUN apt-get install -y imagemagick
@@ -12,9 +12,10 @@ COPY ./loop.sh .
 RUN chmod +x loop.sh
 RUN mkdir data
 RUN mkdir ./data/docx
+RUN mkdir ./data/docx/reports
 RUN mkdir ./data/pdf
 RUN mkdir ./data/sep-pdf
 RUN mkdir ./data/png
 RUN mkdir ./data/archives
 
-ENTRYPOINT /app/loop.sh
+ENTRYPOINT ["/app/loop.sh"]
