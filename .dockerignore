@@ -1,5 +1,5 @@
-*.docx
-*.pdf
-*.png
-.DS_Store
-/data
+# Le Dockerfile ne copie que loop.sh et fix_srcrect.py : tout le reste est
+# exclu du contexte de build (le dossier home/ grossit a chaque conversion).
+*
+!loop.sh
+!fix_srcrect.py

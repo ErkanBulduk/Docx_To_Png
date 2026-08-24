@@ -2,7 +2,7 @@
 echo beginning loop
 set -e
 
-libreoffice="/c/Program Files/LibreOffice/program/soffice.exe"
+# libreoffice="/c/Program Files/LibreOffice/program/soffice.exe"
 pdfseparate="/c/Tools/poppler/Library/bin/pdfseparate"
 pdftoppm="/c/Tools/poppler/Library/bin/pdftoppm"
 
@@ -19,7 +19,9 @@ do
             # Récupérer chemin relatif depuis fileToConvert
             REL_PATH="${FILE#$PWD/data/fileToConvert/}"
             REL_DIR="$(dirname "$REL_PATH")"
-            PDF_OUTPUT_DIR="$PWD/data/pdf/$REL_DIR"
+            # dirname renvoie "." a la racine -> evite les chemins "data/pdf/./x.pdf"
+            [ "$REL_DIR" = "." ] && REL_DIR=""
+            PDF_OUTPUT_DIR="$PWD/data/pdf${REL_DIR:+/$REL_DIR}"
 
             mkdir -p "$PDF_OUTPUT_DIR"
 
@@ -28,7 +30,15 @@ do
                 if [[ "$EXT" == "docx" || "$EXT" == "pptx" ]]
                 then
                     echo "$EXT found - converting $NAME_NO_EXT to PDF"
-                    libreoffice --headless --convert-to pdf "$FILE" --outdir "$PDF_OUTPUT_DIR"
+                    # On travaille sur une copie : fix_srcrect.py modifie le fichier
+                    # en place, l'original doit rester intact pour les archives.
+                    WORK_DIR="$PWD/data/work"
+                    rm -rf "$WORK_DIR"
+                    mkdir -p "$WORK_DIR"
+                    cp "$FILE" "$WORK_DIR/$NAME"
+                    python3 /app/fix_srcrect.py "$WORK_DIR/$NAME" || echo "fix_srcrect a echoue, conversion du fichier tel quel"
+                    libreoffice --headless --convert-to pdf "$WORK_DIR/$NAME" --outdir "$PDF_OUTPUT_DIR"
+                    rm -rf "$WORK_DIR"
                     echo "Conversion done for $NAME_NO_EXT"
                     sleep 3
                 else
@@ -37,8 +47,8 @@ do
                 fi
 
                 PDF_FILE="$PDF_OUTPUT_DIR/$NAME_NO_EXT.pdf"
-                SEP_DIR="$PWD/data/sep-pdf/$REL_DIR"
-                PNG_DIR="$PWD/data/png/$REL_DIR"
+                SEP_DIR="$PWD/data/sep-pdf${REL_DIR:+/$REL_DIR}"
+                PNG_DIR="$PWD/data/png${REL_DIR:+/$REL_DIR}"
 
                 mkdir -p "$SEP_DIR" "$PNG_DIR"
 
@@ -59,8 +69,8 @@ do
             fi
 
             echo "Archiving $FILE"
-            mkdir -p "$PWD/data/archives/$REL_DIR"
-            cp "$FILE" "$PWD/data/archives/$REL_DIR"
+            mkdir -p "$PWD/data/archives${REL_DIR:+/$REL_DIR}"
+            cp "$FILE" "$PWD/data/archives${REL_DIR:+/$REL_DIR}"
 
             echo "Removing original $FILE"
             rm "$FILE"

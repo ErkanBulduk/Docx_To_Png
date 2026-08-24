@@ -1,0 +1,14 @@
+services:
+  docx_to_png:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: docx_to_png:local
+    container_name: docx_to_png
+    volumes:
+      - ./home/nyx/docx_to_png/fileToConvert:/app/data/fileToConvert
+      - ./home/nyx/docx_to_png/png:/app/data/png
+      - ./home/nyx/docx_to_png/pdf:/app/data/pdf
+      - ./home/nyx/docx_to_png/sep-pdf:/app/data/sep-pdf
+      - ./home/nyx/docx_to_png/archives:/app/data/archives
+    restart: always

@@ -1,5 +1,11 @@
+# Donnees de travail montees dans le conteneur (voir docker-compose.yml)
+/home/
+/data/
+
+# Fichiers convertis / sources de test
 *.docx
+*.pptx
 *.pdf
 *.png
+
 .DS_Store
-/data
