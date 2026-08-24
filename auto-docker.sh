@@ -1,5 +1,5 @@
 #/bin/bash
-VERSION="1.0.12"
-docker build -t engiecofely/files_converter:v$VERSION .
-docker push engiecofely/files_converter:v$VERSION
+VERSION="1.1.0"
+docker build -t ghcr.io/belux-bms/files_converter:v$VERSION .
+docker push ghcr.io/belux-bms/files_converter:v$VERSION
 echo -en "\007"
