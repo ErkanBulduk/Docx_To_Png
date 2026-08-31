@@ -57,11 +57,32 @@ do
 
                 for PDF in "$SEP_DIR"/*.pdf
                 do
-                    PDFNAME="${PDF##*/}" 
+                    [ -e "$PDF" ] || continue
+                    PDFNAME="${PDF##*/}"
                     PDF_NO_EXT="${PDFNAME%.*}"
                     echo "Converting $PDF to PNG"
-                    pdftoppm -png -r 300 "$PDF" "$PNG_DIR/$PDF_NO_EXT"
-                    sleep 1
+
+                    # Ecriture atomique. pdftoppm ecrit d'abord des fichiers
+                    # caches ".tmp-*" dans le meme dossier, renommes seulement
+                    # une fois l'image complete. Un renommage dans le meme
+                    # systeme de fichiers est atomique : l'outil qui surveille
+                    # data/png (n8n, Nextcloud...) ne peut plus lire une image
+                    # encore en cours d'ecriture, ce qui donnait des PNG
+                    # tronques ("image a moitie generee").
+                    TMP_PREFIX="$PNG_DIR/.tmp-$PDF_NO_EXT"
+                    rm -f "$TMP_PREFIX"*.png
+                    if pdftoppm -png -r 300 "$PDF" "$TMP_PREFIX"
+                    then
+                        for TMP in "$TMP_PREFIX"*.png
+                        do
+                            [ -e "$TMP" ] || continue
+                            mv -f "$TMP" "$PNG_DIR/${TMP##*/.tmp-}"
+                        done
+                    else
+                        echo "pdftoppm a echoue pour $PDFNAME - PNG non publie"
+                        rm -f "$TMP_PREFIX"*.png
+                    fi
+
                     rm "$PDF"
                 done
             else
